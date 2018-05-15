@@ -1,0 +1,60 @@
+plugins {
+  id "idea"
+  id "org.jetbrains.kotlin.jvm" version "1.2.41"
+  id "application"
+}
+
+repositories {
+  jcenter()
+}
+
+targetCompatibility = sourceCompatibility = 1.8
+mainClassName = "ai.MainKt"
+
+kotlin {
+  experimental.coroutines 'enable'
+}
+compileKotlin {
+  kotlinOptions {
+    jvmTarget = String.valueOf(sourceCompatibility)
+  }
+}
+
+// Set up Kotlin in IDEA
+idea {
+  project {
+    languageLevel = compileKotlin.kotlinOptions.jvmTarget
+    ipr {
+      withXml {
+        def node = it.asNode()
+        def hasKotlinConfiguration = node.children().any {
+          it.name() == "component" && it.attribute("name") == "Kotlin2JvmCompilerArguments"
+        }
+        if (!hasKotlinConfiguration) {
+          node.appendNode("component", [
+              "name": "Kotlin2JvmCompilerArguments"
+          ]).appendNode("option", [
+              "name" : "jvmTarget",
+              "value": compileKotlin.kotlinOptions.jvmTarget
+          ])
+
+          node.appendNode("component", [
+              "name": "KotlinCommonCompilerArguments"
+          ]).appendNode("option", [
+              "name": "coroutinesState",
+              "value": kotlin.experimental.coroutines.name().toLowerCase()
+          ])
+        }
+      }
+    }
+  }
+}
+
+dependencies {
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+  implementation "org.jetbrains.kotlin:kotlin-reflect"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion"
+
+  testCompile "junit:junit:4.11"
+  testCompile "org.jetbrains.kotlin:kotlin-test-junit"
+}
